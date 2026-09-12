@@ -44,16 +44,6 @@ Baldr NN/
 - **Modular Backend**: Independent, testable modules
 - **Plug-in Datasets**: Easy to add new data sources
 
-## 🚀 Deploying to Streamlit Community Cloud
-
-This repository is optimized for 1-click deployment on Streamlit Community Cloud.
-
-1. Push this repository to GitHub.
-2. Go to [Streamlit Community Cloud](https://streamlit.io/cloud).
-3. Connect your GitHub repository.
-4. Set the Main file path to `run_app.py`.
-5. Click **Deploy**.
-
 ## Data Schema
 
 ### Required Excel Sheets
@@ -130,46 +120,6 @@ Use built-in sample data for testing:
 - 4 GUs (Delhi, Pune, Bangalore, Kolkata)
 - 3 Time periods
 - 2 Transport modes (Road, Rail)
-
-## Module Details
-
-### `data_loader.py`
-
-- Parses Excel files
-- Validates schema
-- Handles NaN values and column cleanup
-
-### `model_builder.py`
-
-- Constructs Pyomo ConcreteModel
-- Defines sets, variables, constraints
-- Documents business logic in code
-
-### `solver_engine.py`
-
-- Multi-stage solver fallback
-- Attempts: Custom → HiGHS → GLPK → CBC
-- Returns solve status and timing
-
-### `postprocess.py`
-
-- Calculates KPIs (cost, service level, utilization)
-- Allocates costs to GUs
-- Extracts production/shipment/inventory plans
-
-### `visuals.py`
-
-- Plotly charts (bar, donut, gauge)
-- Sankey diagrams for flow visualization
-- Inventory vs safety stock trends
-
-## Future Enhancements
-
-- [ ] Forecasting layer (ARIMA/Prophet)
-- [ ] Multi-commodity support
-- [ ] Supplier capacity constraints
-- [ ] Real-time dashboard updates
-- [ ] Export to PDF reports
 
 ## License
 
