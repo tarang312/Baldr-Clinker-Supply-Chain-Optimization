@@ -189,7 +189,7 @@ def run_optimization(req: OptimizationRequest):
         model = build_model(data, params)
 
         # Solve model
-        model, results, status_msg = solve_model(model, verbose=False)
+        model, results, status_msg = solve_model(model, data, params, verbose=False)
 
         # Extract KPIs & tables
         kpis = calc_kpis(model, data)
