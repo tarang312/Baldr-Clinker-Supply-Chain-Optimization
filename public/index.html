@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clinker Supply Chain Optimization Platform | Portfolio</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#2563eb',
+              600: '#1d4ed8',
+              700: '#1e40af',
+              800: '#1e3a8a',
+              900: '#0f172a'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Plotly.js CDN -->
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50 dark:bg-slate-900 text-gray-800 dark:text-slate-100 transition-colors duration-200 min-h-screen">
+
+  <!-- TOP NAVBAR -->
+  <header class="border-b border-gray-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl">🏗️</span>
+        <div>
+          <h1 class="text-xl font-bold text-gray-900 dark:text-white">Clinker Supply Chain Optimization</h1>
+          <p class="text-xs text-gray-500 dark:text-slate-400">Executive Decision Support System for Multi-Period Planning</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
+          <i class="fa-solid fa-code"></i> Pyomo MILP • FastAPI • Plotly
+        </span>
+        
+        <!-- THEME SWITCHER -->
+        <button id="themeToggleBtn" onclick="toggleTheme()" class="px-3.5 py-1.5 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-700 text-sm font-semibold transition flex items-center gap-2">
+          <i id="themeIcon" class="fa-solid fa-moon text-amber-500"></i>
+          <span id="themeLabel">Dark Mode</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- HERO INTRO -->
+    <div class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white rounded-2xl p-6 sm:p-8 shadow-xl">
+      <div class="max-w-3xl space-y-3">
+        <div class="inline-block px-3 py-1 text-xs font-bold uppercase tracking-wider bg-white/20 rounded-full">
+          Executive Decision Support Engine
+        </div>
+        <h2 class="text-2xl sm:text-4xl font-extrabold">Multi-Period Production & Allocation Optimization</h2>
+        <p class="text-blue-100 text-sm sm:text-base leading-relaxed">
+          Optimizes clinker allocation, multimodal freight transportation costs (Road/Rail), and inventory balance across Integrated Units (IUs) and Grinding Units (GUs) with soft safety stock constraints.
+        </p>
+      </div>
+    </div>
+
+    <!-- CONTROL PANEL & SOLVER INPUTS -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-slate-700 space-y-6">
+      <div class="flex items-center justify-between border-b border-gray-200 dark:border-slate-700 pb-4">
+        <h3 class="text-lg font-bold flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-blue-600 dark:text-blue-400"></i>
+          Control Panel & Model Parameters
+        </h3>
+        <span id="solverStatusBadge" class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
+          Ready to Solve
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <!-- Demand Scenario -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 dark:text-slate-300 uppercase tracking-wider mb-2">Demand Scenario</label>
+          <select id="scenarioSelect" class="w-full bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="Base Case">Base Case (Default)</option>
+            <option value="High Demand (+15%)">High Demand (+15%)</option>
+            <option value="Low Demand (-15%)">Low Demand (-15%)</option>
+          </select>
+        </div>
+
+        <!-- Safety Stock Penalty -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 dark:text-slate-300 uppercase tracking-wider mb-2">Safety Stock Penalty (₹/ton)</label>
+          <input type="number" id="safetyStockInput" value="5000" step="500" class="w-full bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+
+        <!-- Unmet Demand Penalty -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 dark:text-slate-300 uppercase tracking-wider mb-2">Unmet Demand Penalty (₹/ton)</label>
+          <input type="number" id="unmetDemandInput" value="20000" step="1000" class="w-full bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+
+        <!-- Excel File Upload & Sample Data Toggle -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 dark:text-slate-300 uppercase tracking-wider mb-2">Custom Excel Dataset</label>
+          <input type="file" id="excelFileInput" accept=".xlsx,.xls" class="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-slate-700 dark:file:text-slate-200 cursor-pointer">
+          
+          <div class="mt-2.5 flex items-center gap-2">
+            <input type="checkbox" id="useSampleDataCheck" checked onchange="toggleUseSampleData()" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer">
+            <label for="useSampleDataCheck" class="text-xs font-medium text-gray-700 dark:text-slate-300 cursor-pointer select-none">Use Built-in Sample Data</label>
+          </div>
+          <span id="fileNameBadge" class="hidden mt-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 truncate block"></span>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button id="runBtn" onclick="runOptimization()" class="w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-base rounded-xl shadow-lg hover:shadow-blue-500/25 transition flex items-center justify-center gap-2">
+          <i id="btnSpinner" class="fa-solid fa-rocket"></i>
+          <span>Run Multi-Period Optimization</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- EXECUTIVE KPI CARDS -->
+    <section class="space-y-4">
+      <h3 class="text-xl font-bold border-l-4 border-blue-600 pl-3">📊 Executive Summary</h3>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
+          <div class="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Total Cost</div>
+          <div id="kpiTotalCost" class="text-2xl sm:text-3xl font-extrabold text-blue-600 dark:text-blue-400 mt-2">₹0</div>
+          <div class="text-xs text-gray-400 mt-1">Optimized MILP Objective</div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
+          <div class="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Service Level</div>
+          <div id="kpiServiceLevel" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-2">0.0%</div>
+          <div id="kpiServiceLevelDelta" class="text-xs text-emerald-500 mt-1">+0.0% vs target</div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
+          <div class="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Capacity Utilization</div>
+          <div id="kpiCapacityUtil" class="text-2xl sm:text-3xl font-extrabold text-amber-600 dark:text-amber-400 mt-2">0.0%</div>
+          <div class="text-xs text-gray-400 mt-1">Integrated Units average</div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
+          <div class="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Unmet Demand</div>
+          <div id="kpiUnmetDemand" class="text-2xl sm:text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-2">0 tons</div>
+          <div class="text-xs text-gray-400 mt-1">Total demand shortfall</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5-TAB NAVIGATION BAR -->
+    <section class="space-y-6">
+      <div class="border-b border-gray-200 dark:border-slate-700">
+        <nav class="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
+          <button onclick="switchTab('overview')" id="tabBtn-overview" class="tab-btn border-b-2 border-blue-600 font-bold text-blue-600 dark:text-blue-400 py-3 px-1 text-sm flex items-center gap-2">
+            <span>🎯</span> Overview
+          </button>
+          <button onclick="switchTab('production')" id="tabBtn-production" class="tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200 py-3 px-1 text-sm font-semibold flex items-center gap-2">
+            <span>🏭</span> Production
+          </button>
+          <button onclick="switchTab('logistics')" id="tabBtn-logistics" class="tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200 py-3 px-1 text-sm font-semibold flex items-center gap-2">
+            <span>🚚</span> Logistics
+          </button>
+          <button onclick="switchTab('financial')" id="tabBtn-financial" class="tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200 py-3 px-1 text-sm font-semibold flex items-center gap-2">
+            <span>💰</span> Financial
+          </button>
+          <button onclick="switchTab('inventory')" id="tabBtn-inventory" class="tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200 py-3 px-1 text-sm font-semibold flex items-center gap-2">
+            <span>📦</span> Inventory
+          </button>
+        </nav>
+      </div>
+
+      <!-- TAB 1: OVERVIEW -->
+      <div id="tabContent-overview" class="tab-panel space-y-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
+          <h4 class="text-base font-bold text-gray-800 dark:text-slate-200 mb-3">Supply Chain Flow Visualization (IU → GU)</h4>
+          <div id="sankeyChart" class="w-full h-96"></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
+            <h4 class="text-base font-bold text-gray-800 dark:text-slate-200 mb-3">Cost Composition Breakdown</h4>
+            <div id="costDonutChart" class="w-full h-80"></div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
+            <h4 class="text-base font-bold text-gray-800 dark:text-slate-200 mb-3">Service Level Gauge %</h4>
+            <div id="serviceLevelGaugeChart" class="w-full h-80"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: PRODUCTION -->
+      <div id="tabContent-production" class="tab-panel hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
+            <h4 class="text-base font-bold text-gray-800 dark:text-slate-200 mb-3">Production Plan by Period</h4>
+            <div id="productionBarChart" class="w-full h-80"></div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
+            <h4 class="text-base font-bold text-gray-800 dark:text-slate-200 mb-3">Capacity Utilization by IU</h4>
+            <div id="capacityUtilChart" class="w-full h-80"></div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm space-y-3">
+          <h4 class="text-base font-bold text-gray-800 dark:text-slate-200">Production Plan Details</h4>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left border-collapse">
+              <thead>
+                <tr class="bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200">
+                  <th class="p-3">IU</th>
+                  <th class="p-3">Period</th>
+                  <th class="p-3">Production (tons)</th>
+                  <th class="p-3">Capacity (tons)</th>
+                  <th class="p-3">Utilization %</th>
+                  <th class="p-3">Ending Inventory</th>
+                </tr>
+              </thead>
+              <tbody id="productionTableBody" class="divide-y divide-gray-200 dark:divide-slate-700">
+                <tr><td colspan="6" class="p-4 text-center text-gray-400">Run optimization to view plan.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: LOGISTICS -->
+      <div id="tabContent-logistics" class="tab-panel hidden space-y-6">
+        <!-- LOGISTICS FLOW CHART -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
+          <h4 class="text-base font-bold text-gray-800 dark:text-slate-200 mb-3">Shipment Volume by Transport Mode across Periods</h4>
+          <div id="logisticsChart" class="w-full h-80"></div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h4 class="text-base font-bold text-gray-800 dark:text-slate-200">Shipment Flow Details</h4>
+            
+            <!-- DUAL FILTERS: PERIOD & TRANSPORT MODE -->
+            <div class="flex flex-wrap items-center gap-4">
+              <div class="flex items-center gap-2">
+                <label class="text-xs font-semibold uppercase text-gray-500">Filter Period:</label>
+                <select id="logisticsPeriodFilter" onchange="filterLogisticsTable()" class="bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg p-2 text-xs font-medium outline-none">
+                  <option value="ALL">All Periods</option>
+                </select>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <label class="text-xs font-semibold uppercase text-gray-500">Filter Transport Mode:</label>
+                <select id="logisticsModeFilter" onchange="filterLogisticsTable()" class="bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg p-2 text-xs font-medium outline-none">
+                  <option value="ALL">All Modes</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left border-collapse">
+              <thead>
+                <tr class="bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200">
+                  <th class="p-3">From IU</th>
+                  <th class="p-3">To GU</th>
+                  <th class="p-3">Transport Mode</th>
+                  <th class="p-3">Period</th>
+                  <th class="p-3">Quantity (tons)</th>
+                  <th class="p-3">Unit Cost (₹/ton)</th>
+                  <th class="p-3">Total Freight Cost</th>
+                </tr>
+              </thead>
+              <tbody id="shipmentsTableBody" class="divide-y divide-gray-200 dark:divide-slate-700">
+                <tr><td colspan="7" class="p-4 text-center text-gray-400">Run optimization to view shipment flows.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: FINANCIAL -->
+      <div id="tabContent-financial" class="tab-panel hidden space-y-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm space-y-3">
+          <h4 class="text-base font-bold text-gray-800 dark:text-slate-200">GU-wise Cost Breakdown</h4>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left border-collapse">
+              <thead>
+                <tr class="bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200">
+                  <th class="p-3">GU</th>
+                  <th class="p-3">Production Cost</th>
+                  <th class="p-3">Transport Cost</th>
+                  <th class="p-3">Holding Cost</th>
+                  <th class="p-3">Penalty Cost</th>
+                  <th class="p-3">Total Allocated Cost</th>
+                  <th class="p-3">Inbound Qty (tons)</th>
+                  <th class="p-3">Cost per Ton</th>
+                </tr>
+              </thead>
+              <tbody id="costsTableBody" class="divide-y divide-gray-200 dark:divide-slate-700">
+                <tr><td colspan="8" class="p-4 text-center text-gray-400">Run optimization to view financial breakdown.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
+          <h4 class="text-base font-bold text-gray-800 dark:text-slate-200 mb-3">Cost Composition by GU</h4>
+          <div id="costByGuBarChart" class="w-full h-80"></div>
+        </div>
+      </div>
+
+      <!-- TAB 5: INVENTORY -->
+      <div id="tabContent-inventory" class="tab-panel hidden space-y-6">
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
+          <h4 class="text-base font-bold text-gray-800 dark:text-slate-200 mb-3">Ending Inventory Levels vs Minimum Safety Stock</h4>
+          <div id="inventoryChart" class="w-full h-80"></div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm space-y-3">
+          <h4 class="text-base font-bold text-gray-800 dark:text-slate-200">Inventory & Service Status</h4>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left border-collapse">
+              <thead>
+                <tr class="bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200">
+                  <th class="p-3">GU</th>
+                  <th class="p-3">Period</th>
+                  <th class="p-3">Ending Inventory</th>
+                  <th class="p-3">Min Safety Stock</th>
+                  <th class="p-3">SS Violation</th>
+                  <th class="p-3">Demand</th>
+                  <th class="p-3">Fulfilled</th>
+                  <th class="p-3">Unmet</th>
+                  <th class="p-3">Status</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryTableBody" class="divide-y divide-gray-200 dark:divide-slate-700">
+                <tr><td colspan="9" class="p-4 text-center text-gray-400">Run optimization to view inventory status.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PORTFOLIO ARCHITECTURE SECTION -->
+    <section class="bg-white dark:bg-slate-800 rounded-xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm space-y-4">
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <i class="fa-solid fa-diagram-project text-blue-500"></i>
+        System Architecture & MILP Mathematical Model
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+        <div class="bg-gray-50 dark:bg-slate-900/60 p-4 rounded-lg space-y-2 border border-gray-200 dark:border-slate-700">
+          <h4 class="font-bold text-blue-600 dark:text-blue-400">Mathematical Formulation</h4>
+          <p class="text-xs text-gray-600 dark:text-slate-300 leading-relaxed">
+            <strong>Objective:</strong> Minimize Total Operating Costs = Production Costs + Multimodal Freight Costs (Rail/Road) + Inventory Holding Costs + Safety Stock Violation Penalties + Unmet Demand Penalties.
+          </p>
+          <p class="text-xs text-gray-600 dark:text-slate-300 leading-relaxed">
+            <strong>Constraints:</strong> Production Capacity Bounds, IU Inventory Conservation Balance, GU Demand & Receipt Inventory Conservation, Soft Safety Stock Shortfall Slack.
+          </p>
+        </div>
+
+        <div class="bg-gray-50 dark:bg-slate-900/60 p-4 rounded-lg space-y-2 border border-gray-200 dark:border-slate-700">
+          <h4 class="font-bold text-emerald-600 dark:text-emerald-400">Technical Stack</h4>
+          <ul class="text-xs space-y-1.5 text-gray-600 dark:text-slate-300">
+            <li>• <strong>Backend:</strong> Python 3.14, Pyomo MILP, HiGHS Solver (`highspy`), FastAPI</li>
+            <li>• <strong>Frontend:</strong> Plotly.js, Tailwind CSS, Async Fetch API</li>
+            <li>• <strong>Deployment:</strong> Vercel Serverless Functions + Static Assets</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 mt-12">
+    <div class="max-w-7xl mx-auto px-4 text-center text-xs text-gray-500 dark:text-slate-400">
+      Built with Python Pyomo, Plotly & FastAPI for Enterprise Supply Chain Optimization.
+    </div>
+  </footer>
+
+  <!-- APPLICATION SCRIPT -->
+  <script>
+    let currentTheme = 'dark';
+    let loadedCustomData = null;
+    let currentActiveTab = 'overview';
+
+    // Toggle Use Sample Data Checkbox
+    function toggleUseSampleData() {
+      const isChecked = document.getElementById('useSampleDataCheck').checked;
+      const nameBadge = document.getElementById('fileNameBadge');
+      if (isChecked) {
+        loadedCustomData = null;
+        document.getElementById('excelFileInput').value = '';
+        nameBadge.classList.add('hidden');
+        nameBadge.innerText = '';
+        document.getElementById('solverStatusBadge').innerText = 'Using Built-in Sample Data';
+        document.getElementById('solverStatusBadge').className = 'px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300';
+      }
+    }
+
+    // Switch Tabs
+    function switchTab(tabId) {
+      currentActiveTab = tabId;
+      const tabs = ['overview', 'production', 'logistics', 'financial', 'inventory'];
+      tabs.forEach(t => {
+        const btn = document.getElementById('tabBtn-' + t);
+        const content = document.getElementById('tabContent-' + t);
+        if (t === tabId) {
+          btn.className = "tab-btn border-b-2 border-blue-600 font-bold text-blue-600 dark:text-blue-400 py-3 px-1 text-sm flex items-center gap-2";
+          content.classList.remove('hidden');
+        } else {
+          btn.className = "tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200 py-3 px-1 text-sm font-semibold flex items-center gap-2";
+          content.classList.add('hidden');
+        }
+      });
+
+      if (window.lastSolveData) {
+        renderCharts(window.lastSolveData);
+      }
+    }
+
+    // Theme Toggle Function
+    function toggleTheme() {
+      currentTheme = (currentTheme === 'dark') ? 'light' : 'dark';
+      document.documentElement.classList.toggle('dark', currentTheme === 'dark');
+      
+      const themeIcon = document.getElementById('themeIcon');
+      const themeLabel = document.getElementById('themeLabel');
+      
+      if (currentTheme === 'dark') {
+        themeIcon.className = 'fa-solid fa-moon text-amber-500';
+        themeLabel.innerText = 'Dark Mode';
+      } else {
+        themeIcon.className = 'fa-solid fa-sun text-amber-500';
+        themeLabel.innerText = 'Light Mode';
+      }
+
+      if (window.lastSolveData) {
+        renderCharts(window.lastSolveData);
+      }
+    }
+
+    // Handle Excel File Upload
+    document.getElementById('excelFileInput').addEventListener('change', async function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const badge = document.getElementById('solverStatusBadge');
+      const nameBadge = document.getElementById('fileNameBadge');
+      badge.innerText = 'Parsing Excel...';
+      badge.className = 'px-3 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300';
+
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await res.json();
+        if (res.ok && result.status === 'success') {
+          loadedCustomData = result.data;
+          document.getElementById('useSampleDataCheck').checked = false;
+          nameBadge.innerText = '📁 Uploaded: ' + file.name;
+          nameBadge.classList.remove('hidden');
+          badge.className = 'px-3 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300';
+          badge.innerText = 'Custom Excel Loaded';
+        } else {
+          alert('Excel Upload Error: ' + (result.detail || 'Invalid file structure'));
+          badge.innerText = 'Upload Error';
+          badge.className = 'px-3 py-1 text-xs font-bold rounded-full bg-red-100 text-red-800 dark:bg-red-900/60 dark:text-red-300';
+        }
+      } catch (err) {
+        console.error(err);
+        alert('File upload error: ' + err.message);
+        badge.innerText = 'Upload Error';
+        badge.className = 'px-3 py-1 text-xs font-bold rounded-full bg-red-100 text-red-800 dark:bg-red-900/60 dark:text-red-300';
+      }
+    });
+
+    // Run Optimization API Call
+    async function runOptimization() {
+      const runBtn = document.getElementById('runBtn');
+      const btnSpinner = document.getElementById('btnSpinner');
+      const badge = document.getElementById('solverStatusBadge');
+
+      btnSpinner.className = 'fa-solid fa-circle-notch fa-spin';
+      runBtn.disabled = true;
+      badge.innerText = 'Optimizing MILP...';
+      badge.className = 'px-3 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300';
+
+      const useSample = document.getElementById('useSampleDataCheck').checked;
+      const payload = {
+        scenario: document.getElementById('scenarioSelect').value,
+        safety_stock_penalty: parseFloat(document.getElementById('safetyStockInput').value) || 5000,
+        unmet_demand_penalty: parseFloat(document.getElementById('unmetDemandInput').value) || 20000,
+        custom_data: useSample ? null : loadedCustomData
+      };
+
+      try {
+        const response = await fetch('/api/optimize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || data.status !== 'success') {
+          throw new Error(data.detail || 'Optimization failed');
+        }
+
+        window.lastSolveData = data;
+        badge.innerText = data.status_msg || 'Solved Optimal';
+        badge.className = 'px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300';
+
+        updateKPIs(data.kpis);
+        renderCharts(data);
+        renderTables(data);
+
+      } catch (err) {
+        console.error(err);
+        alert('Optimization error: ' + err.message);
+        badge.innerText = 'Error Solving';
+        badge.className = 'px-3 py-1 text-xs font-bold rounded-full bg-red-100 text-red-800 dark:bg-red-900/60 dark:text-red-300';
+      } finally {
+        btnSpinner.className = 'fa-solid fa-rocket';
+        runBtn.disabled = false;
+      }
+    }
+
+    // Update KPI Cards
+    function updateKPIs(kpis) {
+      document.getElementById('kpiTotalCost').innerText = '₹' + Math.round(kpis.total_cost).toLocaleString();
+      document.getElementById('kpiServiceLevel').innerText = kpis.service_level_pct.toFixed(1) + '%';
+      
+      const delta = (kpis.service_level_pct - 95).toFixed(1);
+      document.getElementById('kpiServiceLevelDelta').innerText = (delta >= 0 ? '+' : '') + delta + '% vs 95% target';
+
+      document.getElementById('kpiCapacityUtil').innerText = kpis.capacity_utilization_pct.toFixed(1) + '%';
+      document.getElementById('kpiUnmetDemand').innerText = Math.round(kpis.total_unmet).toLocaleString() + ' tons';
+    }
+
+    // Render Plotly Charts
+    function renderCharts(data) {
+      const isDark = (currentTheme === 'dark');
+      const template = isDark ? 'plotly_dark' : 'plotly_white';
+      const fontColor = isDark ? '#F8FAFC' : '#1E293B';
+      const bg = 'rgba(0,0,0,0)';
+
+      // 1. Sankey Diagram
+      if (data.sankey && data.sankey.length > 0) {
+        const nodes = Array.from(new Set(data.sankey.flatMap(d => [d.source, d.target])));
+        const nodeMap = {};
+        nodes.forEach((n, idx) => nodeMap[n] = idx);
+
+        const sankeyData = [{
+          type: "sankey",
+          orientation: "h",
+          node: {
+            pad: 15,
+            thickness: 20,
+            line: { color: isDark ? "white" : "black", width: 0.5 },
+            label: nodes,
+            color: nodes.map(n => n.startsWith('IU') ? '#2563eb' : '#0d9488')
+          },
+          link: {
+            source: data.sankey.map(d => nodeMap[d.source]),
+            target: data.sankey.map(d => nodeMap[d.target]),
+            value: data.sankey.map(d => d.value),
+            color: isDark ? 'rgba(96, 165, 250, 0.3)' : 'rgba(37, 99, 235, 0.3)'
+          }
+        }];
+
+        Plotly.newPlot('sankeyChart', sankeyData, {
+          margin: { t: 20, b: 20, l: 20, r: 20 },
+          template: template,
+          paper_bgcolor: bg,
+          plot_bgcolor: bg,
+          font: { color: fontColor }
+        }, { responsive: true });
+      }
+
+      // 2. Cost Donut Chart
+      if (data.costs) {
+        const prodCost = data.costs.reduce((sum, r) => sum + r.Production_Cost, 0);
+        const transCost = data.costs.reduce((sum, r) => sum + r.Transport_Cost, 0);
+        const holdCost = data.costs.reduce((sum, r) => sum + r.Holding_Cost, 0);
+        const penCost = data.costs.reduce((sum, r) => sum + r.Penalty_Cost, 0);
+
+        const donutData = [{
+          values: [prodCost, transCost, holdCost, penCost],
+          labels: ['Production', 'Transport', 'Holding', 'Penalties'],
+          type: 'pie',
+          hole: 0.4,
+          marker: { colors: ['#2563eb', '#0d9488', '#f59e0b', '#ef4444'] }
+        }];
+
+        Plotly.newPlot('costDonutChart', donutData, {
+          margin: { t: 20, b: 20, l: 20, r: 20 },
+          template: template,
+          paper_bgcolor: bg,
+          plot_bgcolor: bg,
+          font: { color: fontColor }
+        }, { responsive: true });
+      }
+
+      // 3. Service Level Gauge
+      if (data.kpis) {
+        const gaugeData = [{
+          type: "indicator",
+          mode: "gauge+number+delta",
+          value: data.kpis.service_level_pct,
+          title: { text: "Service Level %" },
+          delta: { reference: 95 },
+          gauge: {
+            axis: { range: [0, 100] },
+            bar: { color: "#1abc9c" },
+            steps: [
+              { range: [0, 70], color: "#e74c3c" },
+              { range: [70, 90], color: "#f39c12" },
+              { range: [90, 100], color: "#2ecc71" }
+            ]
+          }
+        }];
+
+        Plotly.newPlot('serviceLevelGaugeChart', gaugeData, {
+          margin: { t: 30, b: 20, l: 30, r: 30 },
+          template: template,
+          paper_bgcolor: bg,
+          plot_bgcolor: bg,
+          font: { color: fontColor }
+        }, { responsive: true });
+      }
+
+      // 4. Production Bar Chart
+      if (data.production) {
+        const ius = Array.from(new Set(data.production.map(r => r.IU)));
+        const traces = ius.map(iu => {
+          const rows = data.production.filter(r => r.IU === iu);
+          return {
+            x: rows.map(r => 'Period ' + r.Period),
+            y: rows.map(r => r.Production),
+            name: iu,
+            type: 'bar'
+          };
+        });
+
+        Plotly.newPlot('productionBarChart', traces, {
+          barmode: 'group',
+          margin: { t: 20, b: 40, l: 50, r: 20 },
+          template: template,
+          paper_bgcolor: bg,
+          plot_bgcolor: bg,
+          font: { color: fontColor }
+        }, { responsive: true });
+
+        // Capacity Util Chart
+        const utilTraces = ius.map(iu => {
+          const rows = data.production.filter(r => r.IU === iu);
+          return {
+            x: rows.map(r => 'Period ' + r.Period),
+            y: rows.map(r => r.Production),
+            name: iu + ' Util %',
+            type: 'bar',
+            text: rows.map(r => r['Utilization_%'].toFixed(1) + '%'),
+            textposition: 'auto'
+          };
+        });
+
+        Plotly.newPlot('capacityUtilChart', utilTraces, {
+          barmode: 'group',
+          margin: { t: 20, b: 40, l: 50, r: 20 },
+          template: template,
+          paper_bgcolor: bg,
+          plot_bgcolor: bg,
+          font: { color: fontColor }
+        }, { responsive: true });
+      }
+
+      // 5. Logistics Flow Chart (Shipment Volume by Mode across Periods)
+      if (data.shipments) {
+        const modes = Array.from(new Set(data.shipments.map(r => r.Mode)));
+        const periods = Array.from(new Set(data.shipments.map(r => r[' Period'] || r.Period))).sort((a,b)=>a-b);
+
+        const logisticsTraces = modes.map(mode => {
+          return {
+            x: periods.map(p => 'Period ' + p),
+            y: periods.map(p => {
+              const rows = data.shipments.filter(r => r.Mode === mode && (r[' Period'] || r.Period) === p);
+              return rows.reduce((sum, r) => sum + r.Quantity, 0);
+            }),
+            name: 'Mode: ' + mode,
+            type: 'bar'
+          };
+        });
+
+        Plotly.newPlot('logisticsChart', logisticsTraces, {
+          barmode: 'group',
+          margin: { t: 20, b: 40, l: 50, r: 20 },
+          template: template,
+          paper_bgcolor: bg,
+          plot_bgcolor: bg,
+          font: { color: fontColor }
+        }, { responsive: true });
+      }
+
+      // 6. Cost Composition by GU Bar Chart
+      if (data.costs) {
+        const gus = Array.from(new Set(data.costs.map(r => r.GU)));
+        const categories = ['Production_Cost', 'Transport_Cost', 'Holding_Cost', 'Penalty_Cost'];
+        const catNames = ['Production', 'Transport', 'Holding', 'Penalties'];
+        const catColors = ['#2563eb', '#0d9488', '#f59e0b', '#ef4444'];
+
+        const guCostTraces = categories.map((cat, idx) => {
+          return {
+            x: gus,
+            y: gus.map(gu => {
+              const row = data.costs.find(r => r.GU === gu);
+              return row ? row[cat] : 0;
+            }),
+            name: catNames[idx],
+            type: 'bar',
+            marker: { color: catColors[idx] }
+          };
+        });
+
+        Plotly.newPlot('costByGuBarChart', guCostTraces, {
+          barmode: 'stack',
+          margin: { t: 20, b: 40, l: 50, r: 20 },
+          template: template,
+          paper_bgcolor: bg,
+          plot_bgcolor: bg,
+          font: { color: fontColor }
+        }, { responsive: true });
+      }
+
+      // 7. Inventory Line Chart
+      if (data.inventory) {
+        const gus = Array.from(new Set(data.inventory.map(r => r.GU)));
+        const invTraces = [];
+        gus.forEach(gu => {
+          const rows = data.inventory.filter(r => r.GU === gu);
+          invTraces.push({
+            x: rows.map(r => 'Period ' + r.Period),
+            y: rows.map(r => r.Ending_Inventory),
+            mode: 'lines+markers',
+            name: gu + ' Ending Inv'
+          });
+          invTraces.push({
+            x: rows.map(r => 'Period ' + r.Period),
+            y: rows.map(r => r.Min_Safety_Stock),
+            mode: 'lines',
+            line: { dash: 'dash' },
+            opacity: 0.6,
+            name: gu + ' Min Safety'
+          });
+        });
+
+        Plotly.newPlot('inventoryChart', invTraces, {
+          margin: { t: 20, b: 40, l: 50, r: 20 },
+          template: template,
+          paper_bgcolor: bg,
+          plot_bgcolor: bg,
+          font: { color: fontColor }
+        }, { responsive: true });
+      }
+    }
+
+    // Render Data Tables
+    function renderTables(data) {
+      // 1. Production Table
+      if (data.production) {
+        const tbody = document.getElementById('productionTableBody');
+        tbody.innerHTML = data.production.map(r => `
+          <tr class="hover:bg-gray-50 dark:hover:bg-slate-800">
+            <td class="p-3 font-semibold text-blue-600 dark:text-blue-400">${r.IU}</td>
+            <td class="p-3">Period ${r.Period}</td>
+            <td class="p-3 font-medium">${Math.round(r.Production).toLocaleString()}</td>
+            <td class="p-3 text-gray-500">${Math.round(r.Capacity).toLocaleString()}</td>
+            <td class="p-3 font-semibold ${r['Utilization_%'] >= 90 ? 'text-emerald-500' : 'text-amber-500'}">${r['Utilization_%'].toFixed(1)}%</td>
+            <td class="p-3">${Math.round(r.Ending_Inventory).toLocaleString()}</td>
+          </tr>
+        `).join('');
+      }
+
+      // 2. Logistics Filters Setup
+      if (data.shipments) {
+        const periodFilter = document.getElementById('logisticsPeriodFilter');
+        const modeFilter = document.getElementById('logisticsModeFilter');
+
+        const periods = Array.from(new Set(data.shipments.map(r => r[' Period'] || r.Period))).sort((a,b)=>a-b);
+        const modes = Array.from(new Set(data.shipments.map(r => r.Mode))).sort();
+
+        periodFilter.innerHTML = '<option value="ALL">All Periods</option>' + 
+          periods.map(p => `<option value="${p}">Period ${p}</option>`).join('');
+
+        modeFilter.innerHTML = '<option value="ALL">All Modes</option>' + 
+          modes.map(m => `<option value="${m}">${m}</option>`).join('');
+
+        filterLogisticsTable();
+      }
+
+      // 3. Financial Costs Table
+      if (data.costs) {
+        const tbody = document.getElementById('costsTableBody');
+        tbody.innerHTML = data.costs.map(r => `
+          <tr class="hover:bg-gray-50 dark:hover:bg-slate-800">
+            <td class="p-3 font-semibold text-indigo-600 dark:text-indigo-400">${r.GU}</td>
+            <td class="p-3">₹${Math.round(r.Production_Cost).toLocaleString()}</td>
+            <td class="p-3">₹${Math.round(r.Transport_Cost).toLocaleString()}</td>
+            <td class="p-3">₹${Math.round(r.Holding_Cost).toLocaleString()}</td>
+            <td class="p-3 text-red-500">₹${Math.round(r.Penalty_Cost).toLocaleString()}</td>
+            <td class="p-3 font-bold text-emerald-600 dark:text-emerald-400">₹${Math.round(r.Total_Cost).toLocaleString()}</td>
+            <td class="p-3">${Math.round(r.Inbound_Qty).toLocaleString()}</td>
+            <td class="p-3 font-medium">₹${r.Cost_per_Ton.toFixed(2)}</td>
+          </tr>
+        `).join('');
+      }
+
+      // 4. Inventory Table
+      if (data.inventory) {
+        const tbody = document.getElementById('inventoryTableBody');
+        tbody.innerHTML = data.inventory.map(r => {
+          const isRisk = r.Status === '⚠️ Risk';
+          return `
+            <tr class="hover:bg-gray-50 dark:hover:bg-slate-800">
+              <td class="p-3 font-semibold">${r.GU}</td>
+              <td class="p-3">Period ${r.Period}</td>
+              <td class="p-3">${Math.round(r.Ending_Inventory).toLocaleString()}</td>
+              <td class="p-3 text-gray-500">${Math.round(r.Min_Safety_Stock).toLocaleString()}</td>
+              <td class="p-3 ${r.SS_Violation > 0 ? 'text-red-500 font-bold' : ''}">${Math.round(r.SS_Violation).toLocaleString()}</td>
+              <td class="p-3">${Math.round(r.Demand).toLocaleString()}</td>
+              <td class="p-3">${Math.round(r.Fulfilled).toLocaleString()}</td>
+              <td class="p-3 ${r.Unmet > 0 ? 'text-red-500 font-bold' : ''}">${Math.round(r.Unmet).toLocaleString()}</td>
+              <td class="p-3 font-bold ${isRisk ? 'text-red-500' : 'text-emerald-500'}">
+                ${isRisk ? '⚠️ Risk' : '✅ OK'}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    // Logistics Table Filter Handler (Period + Transport Mode)
+    function filterLogisticsTable() {
+      if (!window.lastSolveData || !window.lastSolveData.shipments) return;
+      const selectedPeriod = document.getElementById('logisticsPeriodFilter').value;
+      const selectedMode = document.getElementById('logisticsModeFilter').value;
+      const tbody = document.getElementById('shipmentsTableBody');
+
+      let filtered = window.lastSolveData.shipments;
+      if (selectedPeriod !== 'ALL') {
+        filtered = filtered.filter(r => String(r[' Period'] || r.Period) === String(selectedPeriod));
+      }
+      if (selectedMode !== 'ALL') {
+        filtered = filtered.filter(r => String(r.Mode) === String(selectedMode));
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-400">No shipment flows match the selected filters.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(r => `
+        <tr class="hover:bg-gray-50 dark:hover:bg-slate-800">
+          <td class="p-3 font-semibold text-blue-600 dark:text-blue-400">${r.From_IU}</td>
+          <td class="p-3 font-semibold text-teal-600 dark:text-teal-400">${r.To_GU}</td>
+          <td class="p-3"><span class="px-2 py-0.5 text-xs font-semibold rounded bg-blue-100 text-blue-700 dark:bg-slate-700 dark:text-blue-300">${r.Mode}</span></td>
+          <td class="p-3">Period ${r[' Period'] || r.Period}</td>
+          <td class="p-3 font-bold">${Math.round(r.Quantity).toLocaleString()}</td>
+          <td class="p-3 text-gray-500">₹${r.Unit_Cost.toFixed(2)}</td>
+          <td class="p-3 font-semibold text-emerald-600 dark:text-emerald-400">₹${Math.round(r.Total_Cost).toLocaleString()}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Run automatically on load
+    window.addEventListener('DOMContentLoaded', runOptimization);
+  </script>
+
+</body>
+</html>
