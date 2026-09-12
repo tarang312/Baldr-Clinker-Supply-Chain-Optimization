@@ -103,15 +103,6 @@ Minimize:
 3. **GU Inventory Balance**: Inv(t) = Inv(t-1) + Receipts(t) - Demand(t) + Unmet(t)
 4. **Safety Stock (Soft)**: Inv(t) + Violation(t) ≥ MinStock(t)
 
-## Configuration
-
-Edit `config.py` to customize:
-
-- Default penalties (safety stock, unmet demand)
-- Color palette
-- Solver preferences
-- Validation rules
-
 ## Sample Data
 
 Use built-in sample data for testing:
