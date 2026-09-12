@@ -34,7 +34,7 @@ def solve_model(model: ConcreteModel, verbose: bool = False) -> Tuple[ConcreteMo
         - status_message: Human-readable status string
     """
     
-    solvers_to_try = ['highs', 'glpk', 'cbc']
+    solvers_to_try = ['appsi_highs', 'highs', 'glpk', 'cbc']
     results = None
     solved = False
     solver_used = None

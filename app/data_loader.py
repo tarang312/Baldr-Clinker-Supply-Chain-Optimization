@@ -7,7 +7,10 @@ This module ensures backward compatibility by maintaining a fixed data contract.
 """
 
 import pandas as pd
-import streamlit as st
+try:
+    import streamlit as st
+except ImportError:
+    st = None
 from typing import Dict, List, Tuple, Set, Any
 import traceback
 
@@ -219,6 +222,11 @@ def parse_excel_to_json(uploaded_file) -> Dict[str, Any]:
         return data
 
     except Exception as e:
-        st.error(f"❌ Error parsing Excel file: {str(e)}")
-        st.error(traceback.format_exc())
+        print(f"Error parsing Excel file: {str(e)}")
+        print(traceback.format_exc())
+        if st is not None:
+            try:
+                st.error(f"❌ Error parsing Excel file: {str(e)}")
+            except Exception:
+                pass
         return None

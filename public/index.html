@@ -475,7 +475,15 @@
           method: 'POST',
           body: formData
         });
-        const result = await res.json();
+
+        const resText = await res.text();
+        let result;
+        try {
+          result = JSON.parse(resText);
+        } catch (jsonErr) {
+          throw new Error('Upload error: ' + (resText.substring(0, 150) || 'Server returned invalid response'));
+        }
+
         if (res.ok && result.status === 'success') {
           loadedCustomData = result.data;
           document.getElementById('useSampleDataCheck').checked = false;
@@ -490,7 +498,7 @@
         }
       } catch (err) {
         console.error(err);
-        alert('File upload error: ' + err.message);
+        alert(err.message);
         badge.innerText = 'Upload Error';
         badge.className = 'px-3 py-1 text-xs font-bold rounded-full bg-red-100 text-red-800 dark:bg-red-900/60 dark:text-red-300';
       }
@@ -522,7 +530,13 @@
           body: JSON.stringify(payload)
         });
 
-        const data = await response.json();
+        const resText = await response.text();
+        let data;
+        try {
+          data = JSON.parse(resText);
+        } catch (jsonErr) {
+          throw new Error('Server response error: ' + (resText.substring(0, 150) || 'Server returned invalid response'));
+        }
 
         if (!response.ok || data.status !== 'success') {
           throw new Error(data.detail || 'Optimization failed');
