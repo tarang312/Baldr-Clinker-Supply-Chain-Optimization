@@ -500,8 +500,8 @@ if data is not None:
                 st.plotly_chart(fig_inv, use_container_width=True)
                 
                 st.markdown("#### Inventory Details")
-                st.dataframe(
-                    df_inventory.style.format({
+                try:
+                    styler = df_inventory.style.format({
                         "Ending_Inventory": "{:,.0f}",
                         "Min_Safety_Stock": "{:,.0f}",
                         "SS_Violation": "{:,.0f}",
@@ -509,12 +509,16 @@ if data is not None:
                         "Fulfilled": "{:,.0f}",
                         "Unmet": "{:,.0f}",
                         "Fulfillment_%": "{:.1f}%"
-                    }).applymap(
-                        lambda v: 'color: red' if v == "⚠️ Risk" else '',
-                        subset=['Status']
-                    ),
-                    use_container_width=True
-                )
+                    })
+                    map_fn = getattr(styler, "map", getattr(styler, "applymap", None))
+                    if map_fn:
+                        styler = map_fn(
+                            lambda v: 'color: red' if v == "⚠️ Risk" else '',
+                            subset=['Status']
+                        )
+                    st.dataframe(styler, use_container_width=True)
+                except Exception:
+                    st.dataframe(df_inventory, use_container_width=True)
                 
         except Exception as e:
             st.error(f"❌ Error during optimization: {str(e)}")
