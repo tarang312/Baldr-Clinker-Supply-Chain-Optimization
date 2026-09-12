@@ -20,7 +20,8 @@ from app.postprocess import (calc_kpis, extract_production_plan,
                               allocate_costs_to_gus)
 from app.visuals import (create_cost_donut_chart, create_production_bar_chart,
                          create_sankey_diagram, create_inventory_chart,
-                         create_service_level_gauge, create_capacity_utilization_chart)
+                         create_service_level_gauge, create_capacity_utilization_chart,
+                         create_logistics_flow_chart)
 from sample_data import generate_sample_data
 from config import (COLOR_PALETTE, DEFAULT_PARAMS, APP_TITLE, APP_ICON, TAGLINE, THEMES)
 
@@ -440,6 +441,10 @@ if data is not None:
                     (df_shipments["Mode"].isin(filter_mode))
                 ] if not df_shipments.empty else df_shipments
                 
+                if not df_filtered.empty:
+                    fig_logistics = create_logistics_flow_chart(df_filtered, theme_mode=theme_choice)
+                    st.plotly_chart(fig_logistics, use_container_width=True)
+
                 st.dataframe(
                     df_filtered.style.format({
                         "Quantity": "{:,.0f}",
@@ -458,7 +463,10 @@ if data is not None:
                         values="Quantity",
                         aggfunc="sum"
                     ).fillna(0)
-                    st.dataframe(pivot.style.background_gradient(cmap="Blues"), use_container_width=True)
+                    try:
+                        st.dataframe(pivot.style.background_gradient(cmap="Blues"), use_container_width=True)
+                    except Exception:
+                        st.dataframe(pivot, use_container_width=True)
             
             # TAB 4: Financial Deep Dive
             with tab4:

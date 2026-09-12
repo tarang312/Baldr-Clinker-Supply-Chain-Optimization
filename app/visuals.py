@@ -244,3 +244,40 @@ def create_capacity_utilization_chart(df: pd.DataFrame, theme_mode: str = "Dark"
     )
     
     return fig
+
+
+def create_logistics_flow_chart(df: pd.DataFrame, theme_mode: str = "Dark") -> go.Figure:
+    """
+    Create bar chart showing shipment volume by transport mode across periods.
+    """
+    theme = _get_theme_settings(theme_mode)
+    fig = go.Figure()
+    
+    if not df.empty and 'Mode' in df.columns:
+        period_col = ' Period' if ' Period' in df.columns else 'Period'
+        modes = df['Mode'].unique().tolist()
+        
+        for mode in modes:
+            df_mode = df[df['Mode'] == mode]
+            flow_by_period = df_mode.groupby(period_col)['Quantity'].sum().reset_index()
+            
+            fig.add_trace(go.Bar(
+                x=flow_by_period[period_col],
+                y=flow_by_period['Quantity'],
+                name=f"Mode: {mode}"
+            ))
+            
+    fig.update_layout(
+        title="Shipment Volume by Transport Mode across Periods",
+        xaxis_title="Time Period",
+        yaxis_title="Quantity (tons)",
+        barmode='group',
+        height=400,
+        hovermode="x unified",
+        template=theme["template"],
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color=theme["font_color"])
+    )
+    
+    return fig

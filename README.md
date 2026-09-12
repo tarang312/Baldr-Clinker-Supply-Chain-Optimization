@@ -54,34 +54,21 @@ pip install -r requirements.txt
 
 ### Running Locally
 
-#### Option 1: Streamlit Dashboard
 ```bash
 python -m streamlit run run_app.py
 ```
 
-#### Option 2: FastAPI + Vercel Portfolio Web App
-```bash
-python -m uvicorn api.index:app --reload --port 8000
-```
-Open `http://localhost:8000` in your browser.
+Open `http://localhost:8501` in your browser.
 
-## 🚀 Deploying to Vercel (Portfolio Web App)
+## 🚀 Deploying to Streamlit Community Cloud
 
-This repository is pre-configured for 1-click Vercel deployment (`vercel.json` + `api/index.py` + `public/index.html`).
+This repository is optimized for 1-click deployment on Streamlit Community Cloud.
 
-### Option A: Via GitHub (Recommended)
 1. Push this repository to GitHub.
-2. Go to [Vercel Dashboard](https://vercel.com/new).
-3. Import your GitHub repository.
-4. Click **Deploy**. Vercel will automatically detect `vercel.json`, install dependencies from `requirements.txt`, and deploy your web portfolio!
-
-### Option B: Via Vercel CLI
-```bash
-npm install -g vercel
-vercel
-```
-
-The app will open at `http://localhost:8501`
+2. Go to [Streamlit Community Cloud](https://streamlit.io/cloud).
+3. Connect your GitHub repository.
+4. Set the Main file path to `run_app.py`.
+5. Click **Deploy**.
 
 ## Data Schema
 
