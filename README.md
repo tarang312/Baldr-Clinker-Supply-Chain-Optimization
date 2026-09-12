@@ -44,22 +44,6 @@ Baldr NN/
 - **Modular Backend**: Independent, testable modules
 - **Plug-in Datasets**: Easy to add new data sources
 
-## Quick Start
-
-### Installation
-
-```bash
-pip install -r requirements.txt
-```
-
-### Running Locally
-
-```bash
-python -m streamlit run run_app.py
-```
-
-Open `http://localhost:8501` in your browser.
-
 ## 🚀 Deploying to Streamlit Community Cloud
 
 This repository is optimized for 1-click deployment on Streamlit Community Cloud.
